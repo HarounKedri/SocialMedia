@@ -5,6 +5,8 @@ const initialState = {
   user: null,
   token: null,
   posts: [],
+  messages: [], // Add messages to the initial state
+  users: [],
 };
 
 export const authSlice = createSlice({
@@ -17,12 +19,13 @@ export const authSlice = createSlice({
     setLogin: (state, action) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
-      state.user.friends = []; // Ensure friends is initialized as an array
     },
     setLogout: (state) => {
       state.user = null;
       state.token = null;
-      state.posts = []; // Clear posts on logout
+      state.posts = [];
+      state.messages = []; // Clear messages on logout
+      state.users = []; // Clear users on logout
     },
     setFriends: (state, action) => {
       if (state.user) {
@@ -45,7 +48,7 @@ export const authSlice = createSlice({
       state.posts.unshift(action.payload.post);
     },
     removePost: (state, action) => {
-      state.posts = state.posts.filter(post => post._id !== action.payload.postId);
+      state.posts = state.posts.filter((post) => post._id !== action.payload.postId);
     },
     updatePostLikes: (state, action) => {
       const updatedPosts = state.posts.map((post) => {
@@ -56,8 +59,51 @@ export const authSlice = createSlice({
       });
       state.posts = updatedPosts;
     },
+    setUsers: (state, action) => {
+      state.users = action.payload.users;
+    },
+    setMessages: (state, action) => {
+      state.messages = action.payload.messages;
+    },
+    addMessage: (state, action) => {
+      state.messages.push(action.payload);
+    },
+    updateMessageWithId: (state, action) => {
+      const index = state.messages.findIndex(
+        (message) =>
+          message.senderId === action.payload.senderId &&
+          message.receiverId === action.payload.receiverId &&
+          message.createdAt === action.payload.createdAt
+      );
+      if (index !== -1) {
+        state.messages[index] = action.payload;
+      }
+    },
+    removeOptimisticMessage: (state, action) => {
+      state.messages = state.messages.filter(
+        (message) =>
+          message.senderId !== action.payload.senderId ||
+          message.receiverId !== action.payload.receiverId ||
+          message.createdAt !== action.payload.createdAt
+      );
+    },
   },
 });
 
-export const { setMode, setLogin, setLogout, setFriends, setPosts, setPost, addPost, removePost, updatePostLikes } = authSlice.actions;
+export const {
+  setMode,
+  setLogin,
+  setLogout,
+  setFriends,
+  setPosts,
+  setPost,
+  addPost,
+  removePost,
+  updatePostLikes,
+  setUsers,
+  setMessages,
+  addMessage,
+  updateMessageWithId,
+  removeOptimisticMessage,
+} = authSlice.actions;
 export default authSlice.reducer;

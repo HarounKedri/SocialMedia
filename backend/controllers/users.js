@@ -20,21 +20,44 @@ export const getUser = async (req, res) => {
     }
 }
 
+// export const getUserFriends = async (req, res) => {
+//     try {
+//       const { id } = req.params;
+//       const foundUser = await User.findById(id).populate('friends', '_id firstName lastName occupation location picturePath');
+  
+//       if (!foundUser) {
+//         return res.status(404).json({ message: "User not found" });
+//       }
+  
+//       res.status(200).json(foundUser.friends);
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).json({ message: "Server error" });
+//     }
+//   };
+
+
+
+/* GET USER FRIENDS */
 export const getUserFriends = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const foundUser = await User.findById(id).populate('friends', '_id firstName lastName occupation location picturePath');
-  
-      if (!foundUser) {
-        return res.status(404).json({ message: "User not found" });
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+
+    const friends = await Promise.all(
+      user.friends.map((id) => User.findById(id))
+    );
+    const formattedFriends = friends.map(
+      ({ _id, firstName, lastName, occupation, picturePath }) => {
+        return { _id, firstName, lastName, occupation, picturePath };
       }
-  
-      res.status(200).json(foundUser.friends);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error" });
-    }
-  };
+    );
+
+    res.status(200).json(formattedFriends);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
   
 
 
@@ -104,3 +127,4 @@ export const addFriend = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 }
+

@@ -3,7 +3,7 @@ import WidgetWrapper from "components/WidgetWrapper";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setFriends } from "state";
-import Friend from "./Friend";
+import Friend from "components/Friend"; // Updated import path
 
 const FriendListWidget = ({ userId }) => {
   const dispatch = useDispatch();
