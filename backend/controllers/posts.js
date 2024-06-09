@@ -117,3 +117,42 @@ export const addComment = async (req, res) => {
     res.status(404).json({ message: err.message });
   }
 };
+
+/* SHARE POST */
+export const sharePost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { userId } = req.body;
+    
+    const originalPost = await Post.findById(postId);
+    if (!originalPost) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const newPost = new Post({
+      userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      location: user.location,
+      description: originalPost.description,
+      userPicturePath: user.picturePath,
+      picturePath: originalPost.picturePath,
+      likes: {},
+      comments: [],
+      isShared: true,
+      originalPostId: originalPost._id,
+      originalUserId: originalPost.userId,
+    });
+
+    await newPost.save();
+
+    res.status(201).json(newPost);
+  } catch (err) {
+    res.status(409).json({ message: err.message });
+  }
+};

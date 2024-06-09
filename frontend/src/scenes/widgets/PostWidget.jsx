@@ -11,7 +11,7 @@ import Friend from "components/Friend";
 import WidgetWrapper from "components/WidgetWrapper";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setPost, removePost } from "state";
+import { setPost, removePost, addPost } from "state";
 
 const PostWidget = ({
   postId,
@@ -24,6 +24,9 @@ const PostWidget = ({
   likes,
   comments,
   isProfile,
+  isShared = false,
+  originalPostId = null,
+  originalUserId = null,
 }) => {
   const [isComments, setIsComments] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -69,6 +72,26 @@ const PostWidget = ({
     }
   };
 
+  const handleShare = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/posts/${postId}/share`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: loggedInUserId }),
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const newPost = await response.json();
+      dispatch(addPost({ post: newPost }));
+    } catch (error) {
+      console.error("Error sharing post:", error);
+    }
+  };
+
   const handleAddComment = async () => {
     try {
       const response = await fetch(`http://localhost:3001/posts/${postId}/comment`, {
@@ -79,6 +102,9 @@ const PostWidget = ({
         },
         body: JSON.stringify({ userId: loggedInUserId, comment: newComment }),
       });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
       const updatedPost = await response.json();
       dispatch(setPost({ post: updatedPost }));
       setNewComment("");
@@ -132,7 +158,7 @@ const PostWidget = ({
         </FlexBetween>
 
         {!isCurrentUser && (
-          <IconButton>
+          <IconButton onClick={handleShare}>
             <ShareOutlined />
           </IconButton>
         )}
