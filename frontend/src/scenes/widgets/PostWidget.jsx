@@ -3,15 +3,15 @@ import {
   FavoriteBorderOutlined,
   FavoriteOutlined,
   ShareOutlined,
-  DeleteOutline,
+  DeleteOutline
 } from "@mui/icons-material";
 import { Box, Divider, IconButton, Typography, useTheme } from "@mui/material";
 import FlexBetween from "components/FlexBetween";
 import Friend from "components/Friend";
 import WidgetWrapper from "components/WidgetWrapper";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setPost, removePost } from "state";
+import { setPost, removePost, setFriends } from "state";
 
 const PostWidget = ({
   postId,
@@ -21,20 +21,41 @@ const PostWidget = ({
   location,
   picturePath,
   userPicturePath,
-  likes = {}, // Default value
-  comments = [], // Default value
+  likes,
+  comments,
   isProfile,
 }) => {
   const [isComments, setIsComments] = useState(false);
   const dispatch = useDispatch();
   const token = useSelector((state) => state.token);
   const loggedInUserId = useSelector((state) => state.user._id);
+  const friends = useSelector((state) => state.user.friends || []);
   const isLiked = Boolean(likes[loggedInUserId]);
   const likeCount = Object.keys(likes).length;
+  const isCurrentUser = loggedInUserId === postUserId;
+  const isFriend = friends.includes(postUserId);
 
   const { palette } = useTheme();
   const main = palette.neutral.main;
   const primary = palette.primary.main;
+
+  useEffect(() => {
+    // Fetch friends if not already fetched
+    const fetchFriends = async () => {
+      if (token && loggedInUserId) {
+        const response = await fetch(`http://localhost:3001/users/${loggedInUserId}/friends`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        dispatch(setFriends({ friends: data }));
+      }
+    };
+
+    fetchFriends();
+  }, [token, loggedInUserId, dispatch]);
 
   const patchLike = async () => {
     const response = await fetch(`http://localhost:3001/posts/${postId}/like`, {
@@ -51,15 +72,35 @@ const PostWidget = ({
 
   const handleDelete = async () => {
     try {
-      await fetch(`http://localhost:3001/posts/${postId}`, {
+      const response = await fetch(`http://localhost:3001/posts/${postId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      dispatch(removePost({ postId }));
+      if (response.ok) {
+        dispatch(removePost({ postId }));
+      } else {
+        console.error("Failed to delete post");
+      }
     } catch (error) {
       console.error("Error deleting post:", error);
+    }
+  };
+
+  const handleAddRemoveFriend = async (friendId) => {
+    try {
+      const response = await fetch(`http://localhost:3001/users/${loggedInUserId}/friends/${friendId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      dispatch(setFriends({ friends: data }));
+    } catch (error) {
+      console.error("Error adding/removing friend:", error);
     }
   };
 
@@ -70,6 +111,9 @@ const PostWidget = ({
         name={name}
         subtitle={location}
         userPicturePath={userPicturePath}
+        onAddRemoveFriend={handleAddRemoveFriend}
+        isFriend={isFriend}
+        isCurrentUser={isCurrentUser}
       />
       <Typography color={main} sx={{ mt: "1rem" }}>
         {description}
@@ -104,15 +148,17 @@ const PostWidget = ({
           </FlexBetween>
         </FlexBetween>
 
-        {isProfile && postUserId === loggedInUserId && (
+        {!isCurrentUser && (
+          <IconButton>
+            <ShareOutlined />
+          </IconButton>
+        )}
+
+        {isProfile && isCurrentUser && (
           <IconButton onClick={handleDelete}>
             <DeleteOutline />
           </IconButton>
         )}
-
-        <IconButton>
-          <ShareOutlined />
-        </IconButton>
       </FlexBetween>
       {isComments && (
         <Box mt="0.5rem">
