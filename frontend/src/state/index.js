@@ -17,10 +17,12 @@ export const authSlice = createSlice({
     setLogin: (state, action) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
+      state.user.friends = []; // Ensure friends is initialized as an array
     },
     setLogout: (state) => {
       state.user = null;
       state.token = null;
+      state.posts = []; // Clear posts on logout
     },
     setFriends: (state, action) => {
       if (state.user) {
@@ -30,14 +32,29 @@ export const authSlice = createSlice({
       }
     },
     setPosts: (state, action) => {
-      state.posts = action.payload.posts.reverse();
+      state.posts = action.payload.posts;
     },
     setPost: (state, action) => {
-      state.posts.unshift(action.payload.post);
+      const updatedPosts = state.posts.map((post) => {
+        if (post._id === action.payload.post._id) return action.payload.post;
+        return post;
+      });
+      state.posts = updatedPosts;
+    },
+    removePost: (state, action) => {
+      state.posts = state.posts.filter(post => post._id !== action.payload.postId);
+    },
+    updatePostLikes: (state, action) => {
+      const updatedPosts = state.posts.map((post) => {
+        if (post._id === action.payload.postId) {
+          return { ...post, likes: action.payload.likes };
+        }
+        return post;
+      });
+      state.posts = updatedPosts;
     },
   },
 });
 
-export const { setMode, setLogin, setLogout, setFriends, setPosts, setPost } =
-  authSlice.actions;
+export const { setMode, setLogin, setLogout, setFriends, setPosts, setPost, removePost, updatePostLikes } = authSlice.actions;
 export default authSlice.reducer;

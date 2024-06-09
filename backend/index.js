@@ -46,8 +46,10 @@ const upload = multer({ storage });
 
 /* ROUTES WITH FILES */
 app.post("/auth/register", upload.single("picture"), register);
+// Assuming this route is for adding a new user with a picture
 app.post("/users", verifyToken, upload.single("picture"), getUsers);
-app.post("/posts", verifyToken, upload.single("picture"), createPost); // Ensure this is uncommented
+// Uncommenting the createPost route
+app.post("/posts", verifyToken, upload.single("picture"), createPost);
 
 /* ROUTES */
 app.use("/auth", authRoutes);
@@ -59,9 +61,8 @@ const PORT = process.env.PORT || 6001;
 mongoose.connect(process.env.MONGO_URL)
   .then(() => {
     console.log("Connected to MongoDB");
+    app.listen(PORT, () => console.log(`Server Port: ${PORT}`));
   })
   .catch((err) => {
     console.error("Failed to connect to MongoDB:", err);
   });
-
-app.listen(PORT, () => console.log(`Server Port: ${PORT}`));
