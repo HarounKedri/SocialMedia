@@ -21,8 +21,8 @@ const PostWidget = ({
   location,
   picturePath,
   userPicturePath,
-  likes,
-  comments,
+  likes = {}, // Default value
+  comments = [], // Default value
   isProfile,
 }) => {
   const [isComments, setIsComments] = useState(false);

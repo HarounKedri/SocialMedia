@@ -33,6 +33,7 @@ const MyPostWidget = ({ picturePath }) => {
   const { palette } = useTheme();
   const { _id } = useSelector((state) => state.user);
   const token = useSelector((state) => state.token);
+  const posts = useSelector((state) => state.posts); // Get the current posts from the state
   const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
   const mediumMain = palette.neutral.mediumMain;
   const medium = palette.neutral.medium;
@@ -45,27 +46,27 @@ const MyPostWidget = ({ picturePath }) => {
       formData.append("picture", image);
       formData.append("picturePath", image.name);
     }
-  
+
     // Log the form data to verify
     for (let [key, value] of formData.entries()) {
       console.log(`${key}: ${value}`);
     }
-  
+
     try {
       const response = await fetch(`http://localhost:3001/posts`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-      const posts = await response.json();
-      dispatch(setPosts({ posts })); // Dispatching the action to update the posts in the state
+      const newPost = await response.json();
+      // Add the new post to the beginning of the current posts state
+      dispatch(setPosts({ posts: [newPost, ...posts] }));
       setImage(null); // Clear the image state
       setPost(""); // Clear the post input
     } catch (error) {
       console.error("Error creating post:", error);
     }
   };
-  
 
   return (
     <WidgetWrapper>

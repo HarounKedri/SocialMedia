@@ -32,8 +32,10 @@ export const authSlice = createSlice({
       }
     },
     setPosts: (state, action) => {
+      console.log("Setting posts in state:", action.payload.posts); // Add this line
       state.posts = action.payload.posts;
     },
+    
     setPost: (state, action) => {
       const updatedPosts = state.posts.map((post) => {
         if (post._id === action.payload.post._id) return action.payload.post;
