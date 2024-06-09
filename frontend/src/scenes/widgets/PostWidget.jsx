@@ -5,13 +5,13 @@ import {
   ShareOutlined,
   DeleteOutline
 } from "@mui/icons-material";
-import { Box, Divider, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, Divider, IconButton, Typography, useTheme, TextField, Button } from "@mui/material";
 import FlexBetween from "components/FlexBetween";
 import Friend from "components/Friend";
 import WidgetWrapper from "components/WidgetWrapper";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setPost, removePost, setFriends } from "state";
+import { setPost, removePost } from "state";
 
 const PostWidget = ({
   postId,
@@ -26,36 +26,17 @@ const PostWidget = ({
   isProfile,
 }) => {
   const [isComments, setIsComments] = useState(false);
+  const [newComment, setNewComment] = useState("");
   const dispatch = useDispatch();
   const token = useSelector((state) => state.token);
   const loggedInUserId = useSelector((state) => state.user._id);
-  const friends = useSelector((state) => state.user.friends || []);
   const isLiked = Boolean(likes[loggedInUserId]);
   const likeCount = Object.keys(likes).length;
   const isCurrentUser = loggedInUserId === postUserId;
-  const isFriend = friends.includes(postUserId);
 
   const { palette } = useTheme();
   const main = palette.neutral.main;
   const primary = palette.primary.main;
-
-  useEffect(() => {
-    // Fetch friends if not already fetched
-    const fetchFriends = async () => {
-      if (token && loggedInUserId) {
-        const response = await fetch(`http://localhost:3001/users/${loggedInUserId}/friends`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        dispatch(setFriends({ friends: data }));
-      }
-    };
-
-    fetchFriends();
-  }, [token, loggedInUserId, dispatch]);
 
   const patchLike = async () => {
     const response = await fetch(`http://localhost:3001/posts/${postId}/like`, {
@@ -88,19 +69,21 @@ const PostWidget = ({
     }
   };
 
-  const handleAddRemoveFriend = async (friendId) => {
+  const handleAddComment = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/users/${loggedInUserId}/friends/${friendId}`, {
+      const response = await fetch(`http://localhost:3001/posts/${postId}/comment`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ userId: loggedInUserId, comment: newComment }),
       });
-      const data = await response.json();
-      dispatch(setFriends({ friends: data }));
+      const updatedPost = await response.json();
+      dispatch(setPost({ post: updatedPost }));
+      setNewComment("");
     } catch (error) {
-      console.error("Error adding/removing friend:", error);
+      console.error("Error adding comment:", error);
     }
   };
 
@@ -111,8 +94,8 @@ const PostWidget = ({
         name={name}
         subtitle={location}
         userPicturePath={userPicturePath}
-        onAddRemoveFriend={handleAddRemoveFriend}
-        isFriend={isFriend}
+        onAddRemoveFriend={() => {}}
+        isFriend={false} // This should be replaced with actual friend status logic
         isCurrentUser={isCurrentUser}
       />
       <Typography color={main} sx={{ mt: "1rem" }}>
@@ -162,11 +145,24 @@ const PostWidget = ({
       </FlexBetween>
       {isComments && (
         <Box mt="0.5rem">
+          <Box display="flex" alignItems="center" mb="1rem">
+            <TextField
+              label="Add a comment"
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+            />
+            <Button variant="contained" color="primary" onClick={handleAddComment} sx={{ ml: 1 }}>
+              Post
+            </Button>
+          </Box>
           {comments.map((comment, i) => (
             <Box key={`${name}-${i}`}>
               <Divider />
               <Typography sx={{ color: main, m: "0.5rem 0", pl: "1rem" }}>
-                {comment}
+                {comment.comment}
               </Typography>
             </Box>
           ))}
