@@ -4,9 +4,10 @@ import LoginPage from "scenes/loginPage";
 import ProfilePage from "scenes/profilePage";
 import MessagesPage from "scenes/messages/MessagesPage";
 import MessagesOverviewPage from "scenes/messages/MessagesOverviewPage";
+import Navbar from "scenes/navbar"; // Import the Navbar component
 import { useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { CssBaseline, ThemeProvider } from "@mui/material";
+import { CssBaseline, ThemeProvider, Box } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { themeSettings } from "./theme";
 import { setUsers } from "state";
@@ -44,25 +45,28 @@ function App() {
       <BrowserRouter>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <Routes>
-            <Route path="/" element={<LoginPage />} />
-            <Route
-              path="/home"
-              element={isAuth ? <HomePage /> : <Navigate to="/" />}
-            />
-            <Route
-              path="/profile/:userId"
-              element={isAuth ? <ProfilePage /> : <Navigate to="/" />}
-            />
-            <Route
-              path="/messages"
-              element={isAuth ? <MessagesOverviewPage /> : <Navigate to="/" />}
-            />
-            <Route
-              path="/messages/:receiverId"
-              element={isAuth ? <MessagesPage /> : <Navigate to="/" />}
-            />
-          </Routes>
+          {isAuth && <Navbar />} {/* Conditionally render Navbar */}
+          <Box mt={isAuth ? "64px" : "0"}> {/* Add margin top only if Navbar is rendered */}
+            <Routes>
+              <Route path="/" element={<LoginPage />} />
+              <Route
+                path="/home"
+                element={isAuth ? <HomePage /> : <Navigate to="/" />}
+              />
+              <Route
+                path="/profile/:userId"
+                element={isAuth ? <ProfilePage /> : <Navigate to="/" />}
+              />
+              <Route
+                path="/messages"
+                element={isAuth ? <MessagesOverviewPage /> : <Navigate to="/" />}
+              />
+              <Route
+                path="/messages/:receiverId"
+                element={isAuth ? <MessagesPage /> : <Navigate to="/" />}
+              />
+            </Routes>
+          </Box>
         </ThemeProvider>
       </BrowserRouter>
     </div>

@@ -20,24 +20,6 @@ export const getUser = async (req, res) => {
     }
 }
 
-// export const getUserFriends = async (req, res) => {
-//     try {
-//       const { id } = req.params;
-//       const foundUser = await User.findById(id).populate('friends', '_id firstName lastName occupation location picturePath');
-  
-//       if (!foundUser) {
-//         return res.status(404).json({ message: "User not found" });
-//       }
-  
-//       res.status(200).json(foundUser.friends);
-//     } catch (err) {
-//       console.error(err);
-//       res.status(500).json({ message: "Server error" });
-//     }
-//   };
-
-
-
 /* GET USER FRIENDS */
 export const getUserFriends = async (req, res) => {
   try {
@@ -127,4 +109,20 @@ export const addFriend = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 }
+
+// Search for users
+export const searchUsers = async (req, res) => {
+  try {
+    const { query } = req.params;
+    const users = await User.find({
+      $or: [
+        { firstName: { $regex: query, $options: "i" } },
+        { lastName: { $regex: query, $options: "i" } },
+      ],
+    }).select("_id firstName lastName picturePath");
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
 
