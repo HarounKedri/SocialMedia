@@ -15,16 +15,18 @@ import {
   ListItemAvatar,
   Avatar,
   ListItemText,
+  Badge,
+  Menu
 } from "@mui/material";
 import {
   Search,
   Message,
   DarkMode,
   LightMode,
-  Notifications,
   Help,
-  Menu,
+  Menu as MenuIcon,
   Close,
+  Notifications as NotificationsIcon
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { setMode, setLogout } from "state";
@@ -36,6 +38,9 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationLoading, setNotificationLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state) => state.user);
@@ -82,6 +87,27 @@ const Navbar = () => {
     return () => clearTimeout(debounceFetch);
   }, [searchQuery, token]);
 
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      setNotificationLoading(true);
+      try {
+        const response = await fetch(`http://localhost:3001/messages/notifications/${user._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setNotifications(data);
+      } catch (err) {
+        console.error("Failed to fetch notifications:", err);
+      } finally {
+        setNotificationLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user, token]);
+
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
@@ -90,6 +116,19 @@ const Navbar = () => {
     navigate(`/profile/${userId}`);
     setSearchQuery("");
     setSearchResults([]);
+  };
+
+  const handleNotificationClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleNotificationClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleNavigateToMessage = (conversationId) => {
+    navigate(`/messages/${conversationId}`);
+    handleNotificationClose();
   };
 
   return (
@@ -171,7 +210,35 @@ const Navbar = () => {
             <IconButton onClick={() => navigate("/messages")}>
               <Message sx={{ fontSize: "25px" }} />
             </IconButton>
-            <Notifications sx={{ fontSize: "25px" }} />
+            <IconButton color="inherit" onClick={handleNotificationClick}>
+              <Badge badgeContent={notifications.length} color="error">
+                <NotificationsIcon sx={{ fontSize: "25px" }} />
+              </Badge>
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              keepMounted
+              open={Boolean(anchorEl)}
+              onClose={handleNotificationClose}
+            >
+              {notificationLoading ? (
+                <MenuItem>
+                  <CircularProgress size={24} />
+                </MenuItem>
+              ) : notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <MenuItem key={notification._id} onClick={() => handleNavigateToMessage(notification.conversationId)}>
+                    <Typography variant="body1">
+                      New message from {notification.senderId.firstName} {notification.senderId.lastName}
+                    </Typography>
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem>
+                  <Typography variant="body1">No new messages</Typography>
+                </MenuItem>
+              )}
+            </Menu>
             <Help sx={{ fontSize: "25px" }} />
             {user && (
               <FormControl variant="standard" value={fullName}>
@@ -204,7 +271,7 @@ const Navbar = () => {
           <IconButton
             onClick={() => setIsMobileMenuToggled(!isMobileMenuToggled)}
           >
-            <Menu />
+            <MenuIcon />
           </IconButton>
         )}
 
@@ -250,7 +317,11 @@ const Navbar = () => {
               <IconButton onClick={() => navigate("/messages")}>
                 <Message sx={{ fontSize: "25px" }} />
               </IconButton>
-              <Notifications sx={{ fontSize: "25px" }} />
+              <IconButton color="inherit" onClick={handleNotificationClick}>
+                <Badge badgeContent={notifications.length} color="error">
+                  <NotificationsIcon sx={{ fontSize: "25px" }} />
+                </Badge>
+              </IconButton>
               <Help sx={{ fontSize: "25px" }} />
               {user && (
                 <FormControl variant="standard" value={fullName}>

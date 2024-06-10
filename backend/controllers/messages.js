@@ -54,3 +54,36 @@ export const deleteMessages = async (req, res) => {
     res.status(404).json({ message: err.message });
   }
 };
+
+// Add to your messages controller
+export const getNotifications = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const messages = await Message.find({ receiverId: userId, isRead: false })
+      .populate("senderId", "firstName lastName")
+      .sort({ createdAt: -1 });
+    res.status(200).json(messages);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+};
+
+
+// Add to your message saving logic
+const saveMessage = async (req, res) => {
+  try {
+    const { senderId, receiverId, content } = req.body;
+    const newMessage = new Message({
+      senderId,
+      receiverId,
+      content,
+      isRead: false, // Mark message as unread
+    });
+    const savedMessage = await newMessage.save();
+    res.status(201).json(savedMessage);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
