@@ -4,7 +4,7 @@ import LoginPage from "scenes/loginPage";
 import ProfilePage from "scenes/profilePage";
 import MessagesPage from "scenes/messages/MessagesPage";
 import MessagesOverviewPage from "scenes/messages/MessagesOverviewPage";
-import Navbar from "scenes/navbar"; // Import the Navbar component
+import Navbar from "scenes/navbar";
 import { useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { CssBaseline, ThemeProvider, Box } from "@mui/material";
